@@ -236,6 +236,8 @@
       opacity: .6; transition: opacity .3s;
     }
     .bottombar:hover { opacity: 1; }
+    /* Tijdens reclame: onze knoppen weg, zodat je bij "Overslaan" van YouTube kunt */
+    body.ad-mode .bottombar { opacity: 0; pointer-events: none; }
     .seek { flex: 1; margin: 0; }
     .controls { display: flex; gap: 8px; padding: 0; }
     .controls .btn { font-size: 14px; padding: 8px 12px; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
@@ -507,10 +509,10 @@
   }
   function enterAdMode() {
     if ($("stage").classList.contains("ad")) return;
-    $("stage").classList.add("ad");
+    $("stage").classList.add("ad"); document.body.classList.add("ad-mode");
     hideCover(); $("shield").classList.remove("on");
   }
-  function exitAdMode() { clearInterval(adWatch); $("stage").classList.remove("ad"); }
+  function exitAdMode() { clearInterval(adWatch); $("stage").classList.remove("ad"); document.body.classList.remove("ad-mode"); }
 
   function onYTState(e) {
     const S = YT.PlayerState;
