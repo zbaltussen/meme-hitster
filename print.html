@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meme Hitster · Kaarten printen</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ff3d7f'/><path d='M38 28 L74 50 L38 72 Z' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="vendor/qrcode.min.js"></script>
+<style>
+  :root { --hot: #ff3d7f; --plum: #3a1460; --sun: #ffd23f; --ink: #1b1533; --card: 65mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Outfit, system-ui, sans-serif; color: var(--ink); background: #e9e6f2; }
+
+  /* ---------- Werkbalk (niet geprint) ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 5; background: #0f0b1e; color: #fff7e8; padding: 14px 16px;
+    display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  }
+  .toolbar h1 { font-family: "Bowlby One", sans-serif; font-size: 22px; margin: 0; }
+  .toolbar h1 span { color: var(--hot); }
+  .toolbar button {
+    border: 0; border-radius: 14px; padding: 12px 18px; font: inherit; font-weight: 800; font-size: 16px;
+    background: var(--hot); color: #fff; cursor: pointer;
+  }
+  .toolbar label { font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+  .toolbar input { width: 5ch; font: inherit; font-weight: 800; text-align: center; border-radius: 8px; border: 0; padding: 4px; }
+  .toolbar details { font-size: 14px; flex-basis: 100%; color: #cfc6ea; }
+  .toolbar details ol { margin: 6px 0 0; padding-left: 20px; line-height: 1.6; }
+  .toolbar .url { font-size: 13px; color: #cfc6ea; }
+  .toolbar .url code { color: #fff; }
+  .toolbar .warn { color: var(--sun); font-weight: 600; }
+
+  /* ---------- Vellen ---------- */
+  .sheets { padding: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .sheet {
+    width: 210mm; height: 297mm; background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.15);
+    display: grid; place-items: center; position: relative; overflow: hidden;
+  }
+  .sheet .label {
+    position: absolute; top: 6mm; left: 0; right: 0; text-align: center; font-size: 9pt; color: #9b94b3;
+  }
+  .grid { display: grid; grid-template-columns: repeat(3, var(--card)); grid-template-rows: repeat(4, var(--card)); }
+  .card {
+    width: var(--card); height: var(--card); outline: .25mm dashed #b9b2cf; outline-offset: -.125mm;
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 5mm; overflow: hidden;
+  }
+  .card.empty { outline-color: transparent; }
+
+  /* Voorkant */
+  .front .qr { width: 38mm; height: 38mm; }
+  .front .qr svg { width: 100%; height: 100%; display: block; }
+  .front .brand { font-family: "Bowlby One", sans-serif; font-size: 11pt; line-height: 1; margin-top: 3mm; letter-spacing: .02em; }
+  .front .brand span { color: var(--hot); }
+  .front .no { position: absolute; top: 3.5mm; right: 4mm; font-weight: 800; font-size: 9pt; color: var(--plum); }
+  .front::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3mm; background: var(--hot);
+  }
+
+  /* Achterkant */
+  .back { background: linear-gradient(160deg, #fff 55%, #fff2f7 100%); }
+  .back .year {
+    font-family: "Bowlby One", sans-serif; font-size: 34pt; line-height: 1; color: var(--hot);
+    transform: rotate(-3deg); margin-bottom: 3mm;
+  }
+  .back .title { font-weight: 800; font-size: 10pt; line-height: 1.2; }
+  .back .title.long { font-size: 8.5pt; }
+  .back .no { position: absolute; bottom: 3.5mm; left: 0; right: 0; font-weight: 600; font-size: 8pt; color: #9b94b3; }
+
+  @page { size: A4 portrait; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .sheets { padding: 0; gap: 0; display: block; }
+    .sheet { box-shadow: none; page-break-after: always; break-after: page; }
+    .sheet .label { display: none; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1>MEME <span>HITSTER</span> · printen</h1>
+  <button id="printBtn">🖨 Print</button>
+  <label>Kaart <input id="from" inputmode="numeric"> t/m <input id="to" inputmode="numeric"></label>
+  <span class="url" id="urlInfo"></span>
+  <details>
+    <summary>Zo print je ze goed (dubbelzijdig)</summary>
+    <ol>
+      <li>Papier: <strong>A4</strong>. Schaal: <strong>100% / werkelijke grootte</strong> (niet "passend maken").</li>
+      <li>Zet <strong>dubbelzijdig</strong> aan, <strong>omslaan via de lange zijde</strong>.</li>
+      <li>Zet <strong>achtergrondafbeeldingen</strong> aan (anders vallen de kleuren weg).</li>
+      <li>Elk vel voorkanten wordt gevolgd door het vel achterkanten; die zijn gespiegeld zodat elk jaartal precies achter zijn QR-code valt.</li>
+      <li>Twijfel? Print eerst alleen vel 1 + 2 en houd het tegen het licht.</li>
+      <li>Knip langs de stippellijnen (6,5 × 6,5 cm).</li>
+    </ol>
+  </details>
+</div>
+
+<div class="sheets" id="sheets"></div>
+
+<script>
+(() => {
+  const PER = 12, COLS = 3;
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+
+  // Basisadres van de speler: de map waar deze pagina staat (niets hardcoded).
+  const base = params.get("base") || location.href.replace(/[?#].*$/, "").replace(/[^/]*$/, "");
+  const isLocal = /^(localhost|127\.|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(new URL(base).hostname);
+  $("urlInfo").innerHTML = `QR-codes wijzen naar <code>${base}?c=…</code>` +
+    (isLocal ? ` <span class="warn">⚠ dit is een lokaal adres – print pas als de site online staat</span>` : "");
+
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function qrSvg(text) {
+    const qr = qrcode(0, "M");
+    qr.addData(text);
+    qr.make();
+    return qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  }
+
+  function frontCard(c) {
+    if (!c) return `<div class="card empty"></div>`;
+    return `<div class="card front">
+      <div class="no">#${c.id}</div>
+      <div class="qr">${qrSvg(base + "?c=" + c.id)}</div>
+      <div class="brand">MEME <span>HITSTER</span></div>
+    </div>`;
+  }
+  function backCard(c) {
+    if (!c) return `<div class="card empty"></div>`;
+    const long = c.title.length > 42 ? " long" : "";
+    return `<div class="card back">
+      <div class="year">${c.year}</div>
+      <div class="title${long}">${esc(c.title)}</div>
+      <div class="no">#${c.id}</div>
+    </div>`;
+  }
+
+  let all = [];
+  function render() {
+    const from = parseInt($("from").value, 10) || 1;
+    const to = parseInt($("to").value, 10) || all.length;
+    const cards = all.filter((c) => +c.id >= from && +c.id <= to);
+    let html = "", sheetNo = 0;
+    for (let i = 0; i < cards.length; i += PER) {
+      const chunk = cards.slice(i, i + PER);
+      while (chunk.length < PER) chunk.push(null);
+      // Voorkanten in gewone volgorde
+      html += `<section class="sheet"><div class="label">Vel ${++sheetNo} · voorkanten</div><div class="grid">${chunk.map(frontCard).join("")}</div></section>`;
+      // Achterkanten: per rij links↔rechts gespiegeld (omslaan via de lange zijde)
+      const mirrored = [];
+      for (let r = 0; r < PER / COLS; r++) mirrored.push(...chunk.slice(r * COLS, r * COLS + COLS).reverse());
+      html += `<section class="sheet"><div class="label">Vel ${++sheetNo} · achterkanten</div><div class="grid">${mirrored.map(backCard).join("")}</div></section>`;
+    }
+    $("sheets").innerHTML = html || "<p>Geen kaarten in deze selectie.</p>";
+  }
+
+  fetch("cards.json", { cache: "no-cache" }).then((r) => r.json()).then((data) => {
+    all = data;
+    $("from").placeholder = "1"; $("to").placeholder = String(all.length);
+    render();
+  });
+  $("from").addEventListener("change", render);
+  $("to").addEventListener("change", render);
+  $("printBtn").addEventListener("click", () => window.print());
+})();
+</script>
+</body>
+</html>

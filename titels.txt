@@ -1,0 +1,109 @@
+# Meme Hitster – titels en jaartallen
+#
+# Dit is wat op de achterkant van de kaart staat en wat je ziet bij "Onthul".
+# Pas gerust aan: per regel  nummer | jaartal | titel
+# Regels met ?? zijn titels waar ik niet zeker van ben – graag even checken.
+# (Regels die met # beginnen worden overgeslagen.)
+
+001 | 2021 | Je heet nu Gemairo
+002 | 2015 | KRAKAKA? Jazeker, dat mag allemaal
+003 | 2023 | Hoe worden straatnamen bedacht? (AT5)
+004 | 2016 | Water?! Wil je me vergiftigen ofzo?
+005 | 2012 | Stay Connected
+006 | 2011 | Blikje in de water
+007 | 2011 | UFO-piloot
+008 | 2007 | Tiny & Lau met kerst
+009 | 1995 | Het is keiglad hier
+010 | 2011 | Niet meer stoppen met lachen na heupoperatie
+011 | 2012 | Wilco en de leugendetector
+012 | 2020 | Kroegbaas Jolke over Dry January
+013 | 2022 | Martin is een standaard drinker
+014 | 2017 | Koude pannenkoeken
+015 | 2016 | Kortpittig chilipepertje spuwt sambal
+016 | 2009 | Nooit gezien
+017 | 2021 | Dave gaat door het lint
+018 | 2014 | Okay, let's go! (Turbo Polyp)
+019 | 2012 | Sidney – Ik ben hoog geleid G
+020 | 2006 | 5 euro op je muil
+021 | 2011 | Soorten koeken op de AutoRAI
+022 | 2012 | BOODSCHAP! 
+023 | 2010 | Gefeliciteerd eh (Babbelbox)
+024 | 2021 | Ik kom uit New York
+025 | 2025 | Acrobatische verleiding gaat mis (Lang Leve de Liefde)
+026 | 2013 | Wat heb je?!
+027 | 2013 | Ik ben bekend van TV
+028 | 2011 | Wat is een diadeem
+029 | 2011 | My husband is antiquair
+030 | 2011 | Een broodje met beleg
+031 | 2011 | Sportief pookje
+032 | 2010 | Henk 'meh' & Ingrid op de Kamasutrabeurs
+033 | 2012 | Het EK 2012-meneertje
+034 | 2010 | WK-finale in de Jordaan
+035 | 2012 | Waarom snuivend tatoeëren onverstandig is
+036 | 2010 | China: normen, waarden, armoede en dergelijke
+037 | 2023 | Danny Froger – totaal niet ongemakkelijk optreden
+038 | 2016 | Rundfunk – Onvoldoende
+039 | 2019 | Nitraatje erbij!
+040 | 2017 | Sinterklaas, ik wil een Xbox met FIFA 18
+041 | 2015 | Ik ga zeker nog een kindje slaan
+042 | 2022 | Feesten, drinken en roken tot laat (RTV Oost)
+043 | 2014 | John Deere, das mien merk
+044 | 2009 | De verkeerde kant
+045 | 2019 | Is helemaal zand
+046 | 2009 | Hier zit geen zand
+047 | 2013 | Rapper Sjors Peter (Man bijt hond)
+048 | 2018 | Jan Smit – "Hey Adela" in de groepsapp
+049 | 2020 | Partytent met open zijkant
+050 | 2012 | Omroep Maxim – Meneer Mandje
+051 | 2016 | DJ Jean live bij RTL Boulevard
+052 | 2017 | Enorme knal – BIEM!
+053 | 1996 | Bart de Graaff – De Baksteen
+054 | 2014 | Zwangerschapsgymnastiek
+055 | 2015 | Partij van de armoede
+056 | 2014 | Mensen komen hier om een kaarsje aan te steken
+057 | 2015 | De wasmachinemevrouw
+058 | 2016 | "Jij bent ook niet de mooiste" (Middelburg)
+059 | 2018 | De Sambalman (Jan rijdt rond)
+060 | 2014 | Gefeliciteerd met dit intervuuu (GoudaTV)
+061 | 2009 | Patricia Paay vs. Theo Maassen
+062 | 2013 | Sinterklaas bestaat niet
+063 | 2008 | Keiharde afspraken over gemaakt
+064 | 2008 | Lingo – de rookvrouw
+065 | 2008 | 101Barz – Gino Pietermaai, Youssef, Kamal & Ferdi
+066 | 1993 | House-documentaire (VPRO)
+067 | 2005 | Het is de schuld van de Rabobank (Probleemwijken)
+068 | 2005 | Ik heb overal schijt aan (Probleemwijken)
+069 | 2017 | Het huis van Thierry Baudet
+070 | 2006 | Balkenende valt van zijn skateboard
+071 | 2014 | Wilders – Meer of minder Marokkanen?
+072 | 2007 | New Kids – Oprapen die steen!
+073 | 2001 | De Pulpshow – Zoek je ruzie?
+074 | 2020 | Timo Klop – Ik val van de trap af
+075 | 2013 | Om koekjes een kaas te rapsen
+076 | 2012 | Limburgs meisje en de windhoos
+077 | 2020 | Ga naar die Tequila Party, doe het!
+078 | 2017 | De mevrouw met de dikke BMW
+079 | 2022 | Ik heb helemaal geen neus (SLAM!)
+080 | 2019 | Altijd herres
+081 | 2015 | Ik wil kaas!
+082 | 2018 | De kauwgomchallenge
+083 | 2009 | Boobies!
+084 | 2020 | René le Blanc – Ik Geloof In Mij
+085 | 2010 | Oh Oh Cherso – Jokertje
+086 | 2015 | HEY RUSTAAGH!
+087 | 2017 | Is warm hier!
+088 | 2020 | De minister en de gebarentolk – Hamsteren!
+089 | 2025 | Volg mij voor humor met inhoud
+090 | 2022 | Jesse Hoeré – Lekker genieten
+091 | 2016 | Kees scheldend in de auto
+092 | 2018 | Hoe begroet u die Aziaten?
+093 | 2006 | Tom steekt vuurwerk af
+094 | 2023 | PSV-fan vertelt een verhaaltje
+095 | 2024 | Overtreders – De spirituele man
+096 | 2023 | Het telefoonnummer van Sinterklaas
+097 | 2021 | Dumfel Demfries
+098 | 2019 | Smurf-ijs
+099 | 2019 | Yordi – Bram in de buurt
+100 | 2006 | Mastermovies – Zeebats
+101 | 2013 | Daisy – Je bent mijn superheld
+102 | 2015 | Het boodschappenlied

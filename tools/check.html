@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Controle: werken alle video's in de speler?</title>
+<style>body{font-family:system-ui;background:#111;color:#eee;padding:16px} .ok{color:#3df5b4} .bad{color:#ff3d7f} #p{position:absolute;left:-9999px;width:320px;height:180px}</style>
+</head><body>
+<h1>Controle: werken alle video's in de speler?</h1>
+<p id="status">Bezig…</p>
+<ul id="out"></ul>
+<div id="p"><div id="yt"></div></div>
+<script>
+// Gebruik: /tools/check.html  (optioneel ?ids=abc,def om losse video-ID's te testen)
+const params = new URLSearchParams(location.search);
+const results = [];
+window.checkResults = results;
+async function run() {
+  let list;
+  if (params.get("ids")) list = params.get("ids").split(",").map((y) => ({ id: y, youtube: y, title: y }));
+  else list = (await (await fetch("../cards.json")).json()).filter((c) => c.source === "youtube");
+  const seen = new Map();
+  for (const c of list) {
+    let r = seen.get(c.youtube);
+    if (!r) { r = await test(c.youtube); seen.set(c.youtube, r); }
+    results.push({ id: c.id, youtube: c.youtube, title: c.title, result: r });
+    const li = document.createElement("li");
+    li.className = r === "ok" ? "ok" : "bad";
+    li.textContent = `${c.id} ${c.title} → ${r}`;
+    document.getElementById("out").appendChild(li);
+  }
+  document.getElementById("status").textContent = "Klaar: " + results.filter((r) => r.result !== "ok").length + " probleem/problemen";
+  window.checkDone = true;
+}
+function test(videoId) {
+  return new Promise((resolve) => {
+    const holder = document.getElementById("p");
+    holder.innerHTML = '<div id="yt"></div>';
+    let done = false;
+    const finish = (v) => { if (done) return; done = true; try { p.destroy(); } catch (_) {} resolve(v); };
+    const p = new YT.Player("yt", {
+      host: "https://www.youtube-nocookie.com", videoId,
+      playerVars: { controls: 0, playsinline: 1, mute: 1, origin: location.origin },
+      events: {
+        onReady: () => { p.mute(); p.playVideo(); },
+        onStateChange: (e) => { if (e.data === YT.PlayerState.PLAYING) finish("ok"); },
+        onError: (e) => finish("fout " + e.data),
+      },
+    });
+    setTimeout(() => finish("geen reactie (timeout)"), 12000);
+  });
+}
+window.onYouTubeIframeAPIReady = run;
+const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s);
+</script>
+</body></html>
