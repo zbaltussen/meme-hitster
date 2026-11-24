@@ -70,6 +70,21 @@
   .back .title.long { font-size: 8.5pt; }
   .back .no { position: absolute; bottom: 3.5mm; left: 0; right: 0; font-weight: 600; font-size: 8pt; color: #9b94b3; }
 
+  /* Grenskaartjes (1 januari 2010 / 2015 / 2020) */
+  .bound { background: #1b1533; color: #fff7e8; outline-color: #6f6694; }
+  .bound .side { font-weight: 800; font-size: 11pt; color: #cfc6ea; }
+  .bound .line { display: flex; align-items: center; gap: 2mm; width: 100%; margin: 3mm 0; }
+  .bound .line::before, .bound .line::after { content: ""; flex: 1; height: 1.2mm; background: var(--sun); border-radius: 1mm; }
+  .bound .yr { font-family: "Bowlby One", sans-serif; font-size: 30pt; line-height: 1; color: var(--sun); }
+  .bound .tag { position: absolute; top: 3.5mm; left: 0; right: 0; font-size: 7pt; font-weight: 800; letter-spacing: .14em; color: var(--hot); }
+  .bound .note { position: absolute; bottom: 3.5mm; left: 0; right: 0; font-size: 7pt; color: #9b94b3; }
+  .boundback { background: #1b1533; outline-color: #6f6694; }
+  .boundback .brand { font-family: "Bowlby One", sans-serif; font-size: 16pt; color: #fff7e8; line-height: 1; }
+  .boundback .brand span { color: var(--hot); }
+  .boundback .sub { font-size: 8pt; font-weight: 800; letter-spacing: .14em; color: var(--sun); margin-top: 2mm; }
+  .toolbar .mode { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; }
+  .toolbar .mode button.secondary { background: #3b3166; }
+
   @page { size: A4 portrait; margin: 0; }
   @media print {
     body { background: #fff; }
@@ -87,6 +102,10 @@
   <h1>MEME <span>HITSTER</span> · printen</h1>
   <button id="printBtn">🖨 Print</button>
   <label>Kaart <input id="from" inputmode="numeric"> t/m <input id="to" inputmode="numeric"></label>
+  <span class="mode">
+    <button class="secondary" id="modeBtn">Toon grenskaartjes</button>
+    <label id="playersLabel" class="hidden" style="display:none">voor <input id="players" inputmode="numeric" value="4"> spelers</label>
+  </span>
   <span class="url" id="urlInfo"></span>
   <details>
     <summary>Zo print je ze goed (dubbelzijdig)</summary>
@@ -141,6 +160,46 @@
       <div class="no">#${c.id}</div>
     </div>`;
   }
+
+  // ---------- Grenskaartjes ----------
+  const BOUNDS = [2010, 2015, 2020];
+  function boundCard(y) {
+    if (!y) return `<div class="card empty"></div>`;
+    return `<div class="card bound">
+      <div class="tag">GRENS · 1 JANUARI</div>
+      <div class="side">← ${y - 1}</div>
+      <div class="line"><span class="yr">${y}</span></div>
+      <div class="side">${y} →</div>
+      <div class="note">telt niet mee om te winnen</div>
+    </div>`;
+  }
+  function boundBack(y) {
+    if (!y) return `<div class="card empty"></div>`;
+    return `<div class="card boundback"><div class="brand">MEME<br><span>HITSTER</span></div><div class="sub">GRENSKAART</div></div>`;
+  }
+  function renderBounds() {
+    const players = Math.max(1, parseInt($("players").value, 10) || 4);
+    const list = [];
+    for (let p = 0; p < players; p++) list.push(...BOUNDS);
+    let html = "", sheetNo = 0;
+    for (let i = 0; i < list.length; i += PER) {
+      const chunk = list.slice(i, i + PER);
+      while (chunk.length < PER) chunk.push(null);
+      html += `<section class="sheet"><div class="label">Vel ${++sheetNo} · grenskaartjes</div><div class="grid">${chunk.map(boundCard).join("")}</div></section>`;
+      const mirrored = [];
+      for (let r = 0; r < PER / COLS; r++) mirrored.push(...chunk.slice(r * COLS, r * COLS + COLS).reverse());
+      html += `<section class="sheet"><div class="label">Vel ${++sheetNo} · achterkanten grenskaartjes</div><div class="grid">${mirrored.map(boundBack).join("")}</div></section>`;
+    }
+    $("sheets").innerHTML = html;
+  }
+  let boundsMode = false;
+  $("modeBtn").addEventListener("click", () => {
+    boundsMode = !boundsMode;
+    $("modeBtn").textContent = boundsMode ? "Toon kaarten" : "Toon grenskaartjes";
+    $("playersLabel").style.display = boundsMode ? "" : "none";
+    boundsMode ? renderBounds() : render();
+  });
+  $("players").addEventListener("change", () => boundsMode && renderBounds());
 
   let all = [];
   function render() {
