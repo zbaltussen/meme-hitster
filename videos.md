@@ -106,3 +106,5 @@ Verzamellijst met video's voor het spel. Per video: link, fragment (standaard: h
 | 100 | https://www.youtube.com/watch?v=Zug3kOsbTnU | YouTube | hele video (5:36) | 2006 | "Mastermovies' Zeebats" – kanaal mastermovies |
 | 101 | https://www.youtube.com/watch?v=G8MO-n_55a8 | YouTube | hele video (3:14) | 2013 | "[reupload] Daisy - Je bent mijn superheld" – kanaal AngelPostStuff (herupload 2024; origineel 2013) |
 | 102 | https://www.youtube.com/watch?v=0-caiNyW8bA | YouTube | hele video (2:18) | 2015 | "Boodschappenlied" – kanaal Michiel de Wit |
+
+| 103 | https://www.youtube.com/watch?v=tocmWagn2KM | YouTube | hele video (1:59) | 2009 | "WEGMISBRUIKERS CLASSIC IK HOEF NIET TE TANKEN SCHAT!" – kanaal EH Diecast & Bricks Unboxing (herupload 2021; origineel 2009) |

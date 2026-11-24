@@ -63,8 +63,17 @@ def dumpert_media(item_id):
     return variants.get("720p") or variants.get("stream"), variants.get("still-large")
 
 
+def previous_hls():
+    """Dumpert-links uit de vorige cards.json, als reserve wanneer Dumpert even niet reageert."""
+    try:
+        return {c["url"]: c["hls"] for c in json.loads(OUT.read_text(encoding="utf-8")) if c.get("hls")}
+    except (OSError, ValueError, KeyError):
+        return {}
+
+
 def main():
     videos, titels = parse_videos(), parse_titels()
+    old_hls = previous_hls()
     missing = sorted(set(videos) ^ set(titels))
     if missing:
         sys.exit(f"Nummers staan niet in beide bestanden: {missing}")
@@ -77,7 +86,13 @@ def main():
         link = v["link"]
         if "dumpert.nl" in link:
             item_id = link.rstrip("/").split("/")[-1]
-            hls, poster = dumpert_media(item_id)
+            try:
+                hls, _poster = dumpert_media(item_id)
+            except Exception as err:  # Dumpert even onbereikbaar → oude link gebruiken
+                hls = old_hls.get(link)
+                if not hls:
+                    sys.exit(f"Dumpert reageert niet ({err}) en kaart {nr} heeft nog geen link. Probeer later opnieuw.")
+                print(f"Let op: Dumpert reageert niet, kaart {nr} gebruikt de bestaande link.")
             card.update(source="dumpert", url=link, hls=hls)
         else:
             m = re.search(r"(?:v=|shorts/)([A-Za-z0-9_-]{11})", link)
