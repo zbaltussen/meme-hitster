@@ -109,3 +109,4 @@ Verzamellijst met video's voor het spel. Per video: link, fragment (standaard: h
 
 | 103 | https://www.youtube.com/watch?v=tocmWagn2KM | YouTube | hele video (1:59) | 2009 | "WEGMISBRUIKERS CLASSIC IK HOEF NIET TE TANKEN SCHAT!" – kanaal EH Diecast & Bricks Unboxing (herupload 2021; origineel 2009) |
 | 104 | https://www.youtube.com/watch?v=ATJ-DqKyRxQ | YouTube | hele video (42 sec) | 2004 | "Douwe Egberts Reclame Oma \| GOLDEN TIME" – (upload 2009; origineel 2004) |
+| 105 | https://www.youtube.com/shorts/5Q7l6-cnr44 | YouTube (Short) | hele video (26 sec) | 2025 | "No stress, Fristi fles" – kanaal Prime Video Nederland (Beauty and the Geek NL) |
