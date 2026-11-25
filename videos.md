@@ -111,3 +111,5 @@ Verzamellijst met video's voor het spel. Per video: link, fragment (standaard: h
 | 104 | https://www.youtube.com/watch?v=ATJ-DqKyRxQ | YouTube | hele video (42 sec) | 2004 | "Douwe Egberts Reclame Oma \| GOLDEN TIME" – (upload 2009; origineel 2004) |
 | 105 | https://www.youtube.com/shorts/5Q7l6-cnr44 | YouTube (Short) | hele video (26 sec) | 2025 | "No stress, Fristi fles" – kanaal Prime Video Nederland (Beauty and the Geek NL) |
 | 106 | https://www.youtube.com/watch?v=KmVr3Te2Sh4 | YouTube | hele video (28 sec) | 2009 | "Marrokaanse meisjes spreken Engels" – kanaal zijpie (upload 21-05-2009) |
+| 107 | https://www.youtube.com/watch?v=2dchzuO4aY0 | YouTube | hele video (1:42) | 1996 | "Louis van gaal -ben ik nou zo slim of jij zo dom" – kanaal aDrunkenPlayer (upload 2014; origineel 1996) |
+| 108 | https://www.youtube.com/watch?v=JkonPMAG0Ss | YouTube | hele video (33 sec) | 2010 | "Piekmoment (Meisje met piek - originele versie)" – kanaal Jules Stuifbergen (upload 14-12-2010) |
