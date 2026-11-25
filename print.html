@@ -71,17 +71,20 @@
   .back .no { position: absolute; bottom: 3.5mm; left: 0; right: 0; font-weight: 600; font-size: 8pt; color: #9b94b3; }
 
   /* Grenskaartjes (1 januari 2010 / 2015 / 2020) */
-  .bound { background: #1b1533; color: #fff7e8; outline-color: #6f6694; }
-  .bound .side { font-weight: 800; font-size: 11pt; color: #cfc6ea; }
+  /* Licht ontwerp: weinig inkt en goed leesbaar in zwart-wit */
+  .bound { background: #fff; color: var(--ink); }
+  .bound .side { font-weight: 800; font-size: 11pt; color: #555; }
   .bound .line { display: flex; align-items: center; gap: 2mm; width: 100%; margin: 3mm 0; }
-  .bound .line::before, .bound .line::after { content: ""; flex: 1; height: 1.2mm; background: var(--sun); border-radius: 1mm; }
-  .bound .yr { font-family: "Bowlby One", sans-serif; font-size: 30pt; line-height: 1; color: var(--sun); }
-  .bound .tag { position: absolute; top: 3.5mm; left: 0; right: 0; font-size: 7pt; font-weight: 800; letter-spacing: .14em; color: var(--hot); }
-  .bound .note { position: absolute; bottom: 3.5mm; left: 0; right: 0; font-size: 7pt; color: #9b94b3; }
-  .boundback { background: #1b1533; outline-color: #6f6694; }
-  .boundback .brand { font-family: "Bowlby One", sans-serif; font-size: 16pt; color: #fff7e8; line-height: 1; }
-  .boundback .brand span { color: var(--hot); }
-  .boundback .sub { font-size: 8pt; font-weight: 800; letter-spacing: .14em; color: var(--sun); margin-top: 2mm; }
+  .bound .line::before, .bound .line::after { content: ""; flex: 1; height: .8mm; background: var(--ink); border-radius: 1mm; }
+  .bound .yr { font-family: "Bowlby One", sans-serif; font-size: 30pt; line-height: 1; color: var(--ink); }
+  .bound .tag { position: absolute; top: 5.5mm; left: 0; right: 0; font-size: 7pt; font-weight: 800; letter-spacing: .14em; color: #444; }
+  .bound .note { position: absolute; bottom: 5.5mm; left: 0; right: 0; font-size: 7pt; color: #777; }
+  .bound::before { content: ""; position: absolute; inset: 2.5mm; border: .5mm solid var(--ink); border-radius: 3mm; pointer-events: none; }
+  .boundback { background: #fff; }
+  .boundback::before { content: ""; position: absolute; inset: 2.5mm; border: .5mm dashed #999; border-radius: 3mm; }
+  .boundback .brand { font-family: "Bowlby One", sans-serif; font-size: 16pt; color: var(--ink); line-height: 1; }
+  .boundback .brand span { color: var(--ink); -webkit-text-stroke: .3mm var(--ink); color: #fff; }
+  .boundback .sub { font-size: 8pt; font-weight: 800; letter-spacing: .14em; color: #555; margin-top: 2mm; }
   .toolbar .mode { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; }
   .toolbar .mode button.secondary { background: #3b3166; }
 
