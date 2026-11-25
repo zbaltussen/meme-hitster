@@ -71,9 +71,28 @@ def previous_hls():
         return {}
 
 
+def previous_ratios():
+    """Beeldverhoudingen uit de vorige cards.json, zodat we YouTube niet steeds opnieuw hoeven te vragen."""
+    try:
+        return {c["youtube"]: c["ratio"] for c in json.loads(OUT.read_text(encoding="utf-8"))
+                if c.get("youtube") and "ratio" in c}
+    except (OSError, ValueError, KeyError):
+        return {}
+
+
+def youtube_ratio(video_id):
+    """Breedte/hoogte van de video volgens YouTube (bijv. 1.778 voor 16:9, 1.333 voor 4:3)."""
+    url = f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_id}&format=json"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        d = json.load(r)
+    return round(d["width"] / d["height"], 3)
+
+
 def main():
     videos, titels = parse_videos(), parse_titels()
     old_hls = previous_hls()
+    old_ratio = previous_ratios()
     missing = sorted(set(videos) ^ set(titels))
     if missing:
         sys.exit(f"Nummers staan niet in beide bestanden: {missing}")
@@ -100,6 +119,13 @@ def main():
             card.update(source="youtube-only" if yt in YOUTUBE_ONLY else "youtube", youtube=yt)
             if "/shorts/" in link:
                 card["vertical"] = True
+            ratio = old_ratio.get(yt)
+            if ratio is None:
+                try:
+                    ratio = youtube_ratio(yt)
+                except Exception:
+                    ratio = 1.778  # onbekend: ga uit van breedbeeld
+            card["ratio"] = ratio
         cards.append(card)
 
     OUT.write_text(json.dumps(cards, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
