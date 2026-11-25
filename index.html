@@ -162,6 +162,9 @@
   /* Vóór de eerste keer spelen vallen tikken door naar de video:
      iPhones starten YouTube alleen na een echte tik op de video zelf. */
   .cover.passthrough { pointer-events: none; }
+  /* Pauze: het stilstaande beeld blijft zichtbaar, met alleen een lichte waas en de ▶ erop */
+  .cover.see-through { background: rgba(9, 6, 20, .35); }
+  .cover.see-through .msg { color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
   .cover .bigplay {
     width: clamp(64px, 16vw, 120px); aspect-ratio: 1; border-radius: 50%; background: var(--hot);
     display: grid; place-items: center; margin: 0 auto 10px; box-shadow: 0 8px 0 rgba(0,0,0,.35);
@@ -385,14 +388,15 @@
 
   // ---------- Afdekscherm ----------
   const cover = $("cover");
-  function setCover(html, { passthrough = false } = {}) {
+  function setCover(html, { passthrough = false, seeThrough = false } = {}) {
     cover.innerHTML = html;
     cover.classList.toggle("passthrough", passthrough);
+    cover.classList.toggle("see-through", seeThrough);
     cover.classList.remove("hidden", "pressed", "loading");
   }
   const hideCover = () => cover.classList.add("hidden");
   const coverStart = () => setCover(`<div><div class="bigplay"></div><div class="msg">Tik om te spelen</div></div>`, { passthrough: !everPlayed });
-  const coverPaused = () => setCover(`<div><div class="bigplay"></div><div class="msg">Pauze · tik om verder te gaan</div></div>`);
+  const coverPaused = () => setCover(`<div><div class="bigplay"></div><div class="msg">Pauze · tik om verder te gaan</div></div>`, { seeThrough: true });
   const coverDone = () => setCover(`<div>
       <div class="big">Klaar!</div>
       <div class="msg">Weet je het jaar?</div>
