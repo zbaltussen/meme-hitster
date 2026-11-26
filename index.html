@@ -742,25 +742,25 @@
       o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.4);
     });
   }
-  // Tennisbal-"pok": droge tik van het vilt + korte holle klank van de bal
+  // Tennisbal-"thock": doffe, korte klap van vilt en rubber (geen nazingende tonen → niet metalig)
   function tennisSound(vol = 0.5) {
     const ctx = ac(), t = ctx.currentTime;
-    const out = ctx.createGain(); out.gain.value = vol; out.connect(ctx.destination);
-    // vilt-tik: heel korte ruisklap
-    const len = Math.floor(ctx.sampleRate * 0.03), nb = ctx.createBuffer(1, len, ctx.sampleRate), d = nb.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+    const out = ctx.createGain(); out.gain.value = vol * 1.6; out.connect(ctx.destination);
+    // gedempte klap: ruis door een laagdoorlaat- én een holle bandfilter, heel kort
+    const len = Math.floor(ctx.sampleRate * 0.06), nb = ctx.createBuffer(1, len, ctx.sampleRate), d = nb.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 6);
     const ns = ctx.createBufferSource(); ns.buffer = nb;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1600; bp.Q.value = 0.9;
-    const ng = ctx.createGain(); ng.gain.value = 0.8;
-    ns.connect(bp).connect(ng).connect(out); ns.start(t);
-    // holle "pok": toon die snel iets zakt en kort uitklinkt
-    [[260, 0.9], [610, 0.35]].forEach(([f, a]) => {
-      const o = ctx.createOscillator(); o.type = "sine";
-      o.frequency.setValueAtTime(f * 1.25, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.025);
-      const g = ctx.createGain(); g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
-      o.connect(g).connect(out); o.start(t); o.stop(t + 0.1);
-    });
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1100; lp.Q.value = 0.5;
+    const hollow = ctx.createBiquadFilter(); hollow.type = "peaking"; hollow.frequency.value = 420; hollow.Q.value = 2.2; hollow.gain.value = 10;
+    const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 90;
+    ns.connect(hp).connect(lp).connect(hollow).connect(out); ns.start(t);
+    // heel korte, lage plof van het rubber (dempt snel uit, zingt niet na)
+    const o = ctx.createOscillator(); o.type = "sine";
+    o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(110, t + 0.03);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.45, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    o.connect(g).connect(out); o.start(t); o.stop(t + 0.05);
   }
+
 
 
   // ---- Trailerstem: eigen opname (sounds/stem.m4a) met effecten ----
