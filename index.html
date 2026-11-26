@@ -754,37 +754,46 @@
   // Energiezwaard dat aangaat: knetterende start, diepe opkomende "vwoem", daarna brommende zoem die wegsterft
   function saberSound(dur = 1.1, vol = 0.45) {
     const ctx = ac(), t = ctx.currentTime;
-    const out = ctx.createGain(); out.connect(ctx.destination);
+    // Vervorming → rauwe, grommende "Sith"-klank
+    const shaper = ctx.createWaveShaper(), curve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 6); }
+    shaper.curve = curve; shaper.oversample = "4x";
+    const out = ctx.createGain(); shaper.connect(out); out.connect(ctx.destination);
     out.gain.setValueAtTime(0.0001, t);
     out.gain.exponentialRampToValueAtTime(vol, t + 0.06);
     out.gain.setValueAtTime(vol, t + 0.35);
     out.gain.exponentialRampToValueAtTime(0.001, t + dur);
     // Filter gaat open tijdens het "uitklappen" en daarna weer iets dicht → warme zoem
     const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = 4;
-    lp.frequency.setValueAtTime(150, t);
-    lp.frequency.exponentialRampToValueAtTime(1800, t + 0.22);
-    lp.frequency.exponentialRampToValueAtTime(650, t + 0.6);
-    lp.connect(out);
+    lp.frequency.setValueAtTime(300, t);
+    lp.frequency.exponentialRampToValueAtTime(3200, t + 0.12);
+    lp.frequency.exponentialRampToValueAtTime(900, t + 0.6);
+    const pre = ctx.createGain(); pre.gain.value = 0.6;
+    lp.connect(pre).connect(shaper);
     // Brom-zaagtanden: toonhoogte schiet omhoog en zakt dan naar de vaste zoem
     const wobble = ctx.createOscillator(); wobble.frequency.value = 6;
     const wg = ctx.createGain(); wg.gain.value = 2.5; wobble.connect(wg);
     [[1, "sawtooth"], [1.008, "sawtooth"], [2.01, "sawtooth"], [0.5, "triangle"]].forEach(([mul, type]) => {
       const o = ctx.createOscillator(); o.type = type;
-      o.frequency.setValueAtTime(45 * mul, t);
-      o.frequency.exponentialRampToValueAtTime(150 * mul, t + 0.18);
-      o.frequency.exponentialRampToValueAtTime(92 * mul, t + 0.45);
+      o.frequency.setValueAtTime(60 * mul, t);
+      o.frequency.exponentialRampToValueAtTime(190 * mul, t + 0.1);
+      o.frequency.exponentialRampToValueAtTime(78 * mul, t + 0.4);
       wg.connect(o.frequency);
       const og = ctx.createGain(); og.gain.value = mul === 2.01 ? 0.25 : mul === 0.5 ? 0.9 : 0.55;
       o.connect(og).connect(lp); o.start(t); o.stop(t + dur + 0.05);
     });
     wobble.start(t); wobble.stop(t + dur + 0.05);
-    // Knetter/ontsteking aan het begin
-    const n = ctx.createBuffer(1, ctx.sampleRate * 0.25, ctx.sampleRate), d = n.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    // Harde knetterende ontsteking + doorknetterend gekraak (onregelmatige tikjes)
+    const len = Math.floor(ctx.sampleRate * dur), n = ctx.createBuffer(1, len, ctx.sampleRate), d = n.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const p = i / len, burst = Math.pow(Math.max(0, 1 - p * 5), 2);      // sterke klap in het begin
+      const crackle = Math.random() < 0.004 ? (Math.random() * 2 - 1) : 0;  // losse knetters
+      d[i] = (Math.random() * 2 - 1) * burst * 0.9 + crackle * (1 - p) * 0.8;
+    }
     const ns = ctx.createBufferSource(); ns.buffer = n;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.8;
-    bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(2500, t + 0.2);
-    const ng = ctx.createGain(); ng.gain.value = 0.35;
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.7;
+    bp.frequency.setValueAtTime(800, t); bp.frequency.exponentialRampToValueAtTime(3500, t + 0.12);
+    const ng = ctx.createGain(); ng.gain.value = 0.5;
     ns.connect(bp).connect(ng).connect(out); ns.start(t);
   }
 
