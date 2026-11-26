@@ -753,6 +753,9 @@
 
   // ---- Trailerstem: eigen opname (sounds/stem.m4a) met effecten ----
   const VOICE_RATE = 0.84;               // lager en trager = zwaarder
+  // Moment in de opname (sounds/stem.m4a) waarop "Productions" begint — gemeten: 2,2 sec.
+  // Nieuwe opname? Dit getal aanpassen (of op null zetten voor automatisch zoeken).
+  const PRODUCTIONS_IN_RECORDING = 2.2;
   let voiceRaw = null, voice = null;     // ruwe bytes / bewerkte gegevens
   fetch("sounds/stem.m4a").then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => (voiceRaw = b)).catch(() => {});
 
@@ -806,15 +809,16 @@
   }
 
   // Filmtrailer-"BRAAAM": diepe, koperachtige akkoordtoon + dreun
-  function braam(when, dur = 2.6, vol = 0.32) {
+  function braam(when, dur = 2.6, vol = 0.14) {
     const ctx = ac();
     const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = 2;
-    lp.frequency.setValueAtTime(180, when); lp.frequency.exponentialRampToValueAtTime(1400, when + 0.12);
-    lp.frequency.exponentialRampToValueAtTime(400, when + dur);
+    lp.frequency.setValueAtTime(140, when); lp.frequency.exponentialRampToValueAtTime(520, when + 0.18);
+    lp.frequency.exponentialRampToValueAtTime(220, when + dur);
     const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, when);
     g.gain.exponentialRampToValueAtTime(vol, when + 0.05); g.gain.exponentialRampToValueAtTime(0.001, when + dur);
     lp.connect(g).connect(ctx.destination);
-    [41.2, 41.5, 61.7, 82.4, 123.5].forEach((f) => {         // E1, E2, B2 … laag en dreigend
+    lp.Q.value = 0.7;
+    [41.2, 41.5, 61.7, 82.4].forEach((f) => {                  // E1, E2, B2 … laag en dreigend
       const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f;
       o.connect(lp); o.start(when); o.stop(when + dur + 0.05);
     });
@@ -833,8 +837,9 @@
     }
     // Duur en het moment van "PRODUCTIONS" afstemmen op de stem
     const TEXT_AT = 1.55;
-    const PRODUCTIONS_EARLIER = 0.5;     // hoeveel sec "PRODUCTIONS" vóór het gesproken woord in beeld komt
-    const word2 = voice && voice.word2 ? Math.max(2.05, TEXT_AT + (voice.word2 - voice.start) / VOICE_RATE - PRODUCTIONS_EARLIER) : 2.05;
+    const spoken2 = PRODUCTIONS_IN_RECORDING ?? (voice && voice.word2);
+    // tekst begint 0,15 sec vóór het woord te schuiven, zodat hij er staat als je het hoort
+    const word2 = voice && spoken2 ? Math.max(2.05, TEXT_AT + 0.05 + (spoken2 - voice.start) / VOICE_RATE - 0.15) : 2.05;
     const voiceEnd = voice ? TEXT_AT + (voice.end - voice.start) / VOICE_RATE : 2.6;
     const total = Math.max(4.8, voiceEnd + 1.8);
     egg.style.animationDuration = total + "s";
