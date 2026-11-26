@@ -736,67 +736,6 @@
       o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.4);
     });
   }
-  // Laser: stoere, lage blaster — dalende zaagtand + sub-bas eronder, warm gefilterd
-  function laserSound(from = 700, to = 55, dur = 0.5, vol = 0.4) {
-    const ctx = ac(), t = ctx.currentTime;
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass";
-    lp.frequency.setValueAtTime(2400, t); lp.frequency.exponentialRampToValueAtTime(300, t + dur); lp.Q.value = 6;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    lp.connect(g).connect(ctx.destination);
-    [["sawtooth", 1], ["sawtooth", 1.012], ["square", 0.5]].forEach(([type, mul]) => {
-      const o = ctx.createOscillator(); o.type = type;
-      o.frequency.setValueAtTime(from * mul, t); o.frequency.exponentialRampToValueAtTime(to * mul, t + dur);
-      o.connect(lp); o.start(t); o.stop(t + dur + 0.02);
-    });
-  }
-  // Energiezwaard dat aangaat: knetterende start, diepe opkomende "vwoem", daarna brommende zoem die wegsterft
-  function saberSound(dur = 1.1, vol = 0.45) {
-    const ctx = ac(), t = ctx.currentTime;
-    // Vervorming → rauwe, grommende "Sith"-klank
-    const shaper = ctx.createWaveShaper(), curve = new Float32Array(1024);
-    for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 6); }
-    shaper.curve = curve; shaper.oversample = "4x";
-    const out = ctx.createGain(); shaper.connect(out); out.connect(ctx.destination);
-    out.gain.setValueAtTime(0.0001, t);
-    out.gain.exponentialRampToValueAtTime(vol, t + 0.06);
-    out.gain.setValueAtTime(vol, t + 0.35);
-    out.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    // Filter gaat open tijdens het "uitklappen" en daarna weer iets dicht → warme zoem
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = 4;
-    lp.frequency.setValueAtTime(300, t);
-    lp.frequency.exponentialRampToValueAtTime(3200, t + 0.12);
-    lp.frequency.exponentialRampToValueAtTime(900, t + 0.6);
-    const pre = ctx.createGain(); pre.gain.value = 0.6;
-    lp.connect(pre).connect(shaper);
-    // Brom-zaagtanden: toonhoogte schiet omhoog en zakt dan naar de vaste zoem
-    const wobble = ctx.createOscillator(); wobble.frequency.value = 6;
-    const wg = ctx.createGain(); wg.gain.value = 2.5; wobble.connect(wg);
-    [[1, "sawtooth"], [1.008, "sawtooth"], [2.01, "sawtooth"], [0.5, "triangle"]].forEach(([mul, type]) => {
-      const o = ctx.createOscillator(); o.type = type;
-      o.frequency.setValueAtTime(60 * mul, t);
-      o.frequency.exponentialRampToValueAtTime(190 * mul, t + 0.1);
-      o.frequency.exponentialRampToValueAtTime(78 * mul, t + 0.4);
-      wg.connect(o.frequency);
-      const og = ctx.createGain(); og.gain.value = mul === 2.01 ? 0.25 : mul === 0.5 ? 0.9 : 0.55;
-      o.connect(og).connect(lp); o.start(t); o.stop(t + dur + 0.05);
-    });
-    wobble.start(t); wobble.stop(t + dur + 0.05);
-    // Harde knetterende ontsteking + doorknetterend gekraak (onregelmatige tikjes)
-    const len = Math.floor(ctx.sampleRate * dur), n = ctx.createBuffer(1, len, ctx.sampleRate), d = n.getChannelData(0);
-    for (let i = 0; i < len; i++) {
-      const p = i / len, burst = Math.pow(Math.max(0, 1 - p * 5), 2);      // sterke klap in het begin
-      const crackle = Math.random() < 0.004 ? (Math.random() * 2 - 1) : 0;  // losse knetters
-      d[i] = (Math.random() * 2 - 1) * burst * 0.9 + crackle * (1 - p) * 0.8;
-    }
-    const ns = ctx.createBufferSource(); ns.buffer = n;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.7;
-    bp.frequency.setValueAtTime(800, t); bp.frequency.exponentialRampToValueAtTime(3500, t + 0.12);
-    const ng = ctx.createGain(); ng.gain.value = 0.5;
-    ns.connect(bp).connect(ng).connect(out); ns.start(t);
-  }
-
   // Boing: korte veerkrachtige toon die even omhoog wiebelt en dan zakt
   function boingSound(vol = 0.35) {
     const ctx = ac(), t = ctx.currentTime;
@@ -812,20 +751,104 @@
     o.start(t); vib.start(t); o.stop(t + 0.34); vib.stop(t + 0.34);
   }
 
-  function playEgg() {
+  // ---- Trailerstem: eigen opname (sounds/stem.m4a) met effecten ----
+  const VOICE_RATE = 0.84;               // lager en trager = zwaarder
+  let voiceRaw = null, voice = null;     // ruwe bytes / bewerkte gegevens
+  fetch("sounds/stem.m4a").then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => (voiceRaw = b)).catch(() => {});
+
+  // Stilte begin/eind wegknippen en de pauze tussen de twee woorden vinden
+  function analyseVoice(buf) {
+    const d = buf.getChannelData(0), sr = buf.sampleRate, win = Math.floor(sr * 0.02);
+    const env = [];
+    for (let i = 0; i < d.length; i += win) { let s = 0; for (let j = i; j < Math.min(i + win, d.length); j++) s += d[j] * d[j]; env.push(Math.sqrt(s / win)); }
+    const peak = Math.max(...env), thr = peak * 0.08;
+    const first = env.findIndex((v) => v > thr), last = env.length - 1 - [...env].reverse().findIndex((v) => v > thr);
+    // langste stille stuk binnen de opname = pauze tussen "Ballbetween" en "Productions"
+    let best = null, runStart = null;
+    for (let i = first; i <= last; i++) {
+      if (env[i] < thr) { if (runStart === null) runStart = i; }
+      else if (runStart !== null) { if (!best || i - runStart > best[1] - best[0]) best = [runStart, i]; runStart = null; }
+    }
+    const t = (k) => (k * win) / sr;
+    return { start: Math.max(0, t(first) - 0.03), end: t(last) + 0.15, word2: best && best[1] - best[0] >= 4 ? t(best[1]) : null };
+  }
+
+  // Galm van een grote zaal: kunstmatige impulsrespons (wegstervende ruis)
+  function hallIR(ctx, secs = 2.8) {
+    const len = Math.floor(ctx.sampleRate * secs), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+    return ir;
+  }
+
+  function playVoice(when) {
+    const ctx = ac(), { buf, start, end } = voice;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = VOICE_RATE;
+    const low = ctx.createBiquadFilter(); low.type = "lowshelf"; low.frequency.value = 160; low.gain.value = 9;
+    const pres = ctx.createBiquadFilter(); pres.type = "peaking"; pres.frequency.value = 2800; pres.Q.value = 1; pres.gain.value = 3;
+    const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 55;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -30; comp.knee.value = 6; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.2;
+    const dry = ctx.createGain(); dry.gain.value = 1.6;
+    src.connect(hp).connect(low).connect(pres).connect(comp);
+    comp.connect(dry).connect(ctx.destination);
+    // galm
+    const rev = ctx.createConvolver(); rev.buffer = hallIR(ctx);
+    const wet = ctx.createGain(); wet.gain.value = 0.55;
+    comp.connect(rev).connect(wet).connect(ctx.destination);
+    // echo
+    const dl = ctx.createDelay(1); dl.delayTime.value = 0.32;
+    const fb = ctx.createGain(); fb.gain.value = 0.32;
+    const ef = ctx.createBiquadFilter(); ef.type = "lowpass"; ef.frequency.value = 2200;
+    const eg = ctx.createGain(); eg.gain.value = 0.35;
+    comp.connect(dl); dl.connect(ef).connect(fb).connect(dl); ef.connect(eg).connect(ctx.destination);
+    src.start(when, start, end - start);
+  }
+
+  // Filmtrailer-"BRAAAM": diepe, koperachtige akkoordtoon + dreun
+  function braam(when, dur = 2.6, vol = 0.32) {
+    const ctx = ac();
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = 2;
+    lp.frequency.setValueAtTime(180, when); lp.frequency.exponentialRampToValueAtTime(1400, when + 0.12);
+    lp.frequency.exponentialRampToValueAtTime(400, when + dur);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(vol, when + 0.05); g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    lp.connect(g).connect(ctx.destination);
+    [41.2, 41.5, 61.7, 82.4, 123.5].forEach((f) => {         // E1, E2, B2 … laag en dreigend
+      const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f;
+      o.connect(lp); o.start(when); o.stop(when + dur + 0.05);
+    });
+    const sub = ctx.createOscillator(); sub.type = "sine";
+    sub.frequency.setValueAtTime(90, when); sub.frequency.exponentialRampToValueAtTime(32, when + 0.6);
+    const sg = ctx.createGain(); sg.gain.setValueAtTime(0.9, when); sg.gain.exponentialRampToValueAtTime(0.001, when + 1.2);
+    sub.connect(sg).connect(ctx.destination); sub.start(when); sub.stop(when + 1.3);
+  }
+
+  async function playEgg() {
     const egg = $("egg");
     eggTimers.forEach(clearTimeout); eggTimers = [];
+    const ctx = ac(); try { await ctx.resume(); } catch (_) {}
+    if (voiceRaw && !voice) {
+      try { const buf = await ctx.decodeAudioData(voiceRaw.slice(0)); voice = { buf, ...analyseVoice(buf) }; } catch (_) { voiceRaw = null; }
+    }
+    // Duur en het moment van "PRODUCTIONS" afstemmen op de stem
+    const TEXT_AT = 1.55;
+    const word2 = voice && voice.word2 ? TEXT_AT + (voice.word2 - voice.start) / VOICE_RATE : 2.05;
+    const voiceEnd = voice ? TEXT_AT + (voice.end - voice.start) / VOICE_RATE : 2.6;
+    const total = Math.max(4.8, voiceEnd + 1.8);
+    egg.style.animationDuration = total + "s";
+    egg.querySelector(".egg-word.sub").style.animationDelay = word2 + "s";
+
     egg.classList.add("hidden"); void egg.offsetWidth; // animatie opnieuw starten
     egg.classList.remove("hidden");
-    try { ac().resume(); } catch (_) {}
+    const t0 = ctx.currentTime;
     // Boing bij elke stuit (de bal raakt de grond op 45%, 75% en 100% van de val van 1 sec)
     eggTimers.push(setTimeout(() => boingSound(0.38), 450));
     eggTimers.push(setTimeout(() => boingSound(0.22), 750));
     eggTimers.push(setTimeout(() => boingSound(0.12), 1000));
     eggTimers.push(setTimeout(clampSound, 1220));
-    eggTimers.push(setTimeout(() => saberSound(1.3, 0.5), 1550));   // BALLBETWEEN
-    eggTimers.push(setTimeout(() => saberSound(0.8, 0.28), 2050));  // PRODUCTIONS
-    eggTimers.push(setTimeout(closeEgg, 4800));
+    braam(t0 + TEXT_AT, Math.min(total - TEXT_AT, 3.2));
+    if (voice) playVoice(t0 + TEXT_AT + 0.05);
+    eggTimers.push(setTimeout(closeEgg, total * 1000));
   }
   function closeEgg() { eggTimers.forEach(clearTimeout); eggTimers = []; $("egg").classList.add("hidden"); }
   $("eggTrigger").addEventListener("click", playEgg);
