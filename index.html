@@ -238,7 +238,7 @@
   .egg-logo * { transform-box: fill-box; transform-origin: center; }
   .egg-ring { opacity: 0; animation: egg-ring .35s ease 1.15s forwards; }
   /* Bal valt erin en stuitert */
-  .egg-ball { animation: egg-drop 1s cubic-bezier(.3, 0, .4, 1) both; }
+  .egg-ball { animation: egg-drop 1s linear both; transform-origin: 50% 100%; }
   /* Muren schuiven naar binnen en klemmen de bal */
   .egg-wall.l { animation: egg-wall-l .32s cubic-bezier(.6, 0, .9, .4) .9s both; }
   .egg-wall.r { animation: egg-wall-r .32s cubic-bezier(.6, 0, .9, .4) .9s both; }
@@ -256,13 +256,19 @@
     font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: .42em;
     font-size: clamp(12px, 2.6vw, 28px); color: var(--sun); animation-delay: 2.05s;
   }
+  /* Tennisbal: valt, tikt 5x steeds lager en sneller, en wordt bij elke tik even platgedrukt.
+     Tikken op 0,34 · 0,62 · 0,80 · 0,92 · 1,00 sec. */
   @keyframes egg-drop {
-    0% { transform: translateY(-260%); }
-    45% { transform: translateY(0); }
-    60% { transform: translateY(-55%); }
-    75% { transform: translateY(0); }
-    86% { transform: translateY(-18%); }
-    100% { transform: translateY(0); }
+    0%   { transform: translateY(-300%) scale(1, 1); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    34%  { transform: translateY(0) scale(1.18, .82); animation-timing-function: cubic-bezier(0, .55, .45, 1); }
+    48%  { transform: translateY(-120%) scale(.97, 1.03); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    62%  { transform: translateY(0) scale(1.14, .86); animation-timing-function: cubic-bezier(0, .55, .45, 1); }
+    71%  { transform: translateY(-62%) scale(1, 1); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    80%  { transform: translateY(0) scale(1.1, .9); animation-timing-function: cubic-bezier(0, .55, .45, 1); }
+    86%  { transform: translateY(-28%) scale(1, 1); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    92%  { transform: translateY(0) scale(1.06, .94); animation-timing-function: cubic-bezier(0, .55, .45, 1); }
+    96%  { transform: translateY(-9%) scale(1, 1); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    100% { transform: translateY(0) scale(1, 1); }
   }
   @keyframes egg-wall-l { from { transform: translateX(-420%); } to { transform: translateX(0); } }
   @keyframes egg-wall-r { from { transform: translateX(420%); } to { transform: translateX(0); } }
@@ -736,20 +742,26 @@
       o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.4);
     });
   }
-  // Boing: korte veerkrachtige toon die even omhoog wiebelt en dan zakt
-  function boingSound(vol = 0.35) {
+  // Tennisbal-"pok": droge tik van het vilt + korte holle klank van de bal
+  function tennisSound(vol = 0.5) {
     const ctx = ac(), t = ctx.currentTime;
-    const o = ctx.createOscillator(); o.type = "sine";
-    o.frequency.setValueAtTime(180, t);
-    o.frequency.exponentialRampToValueAtTime(420, t + 0.04);
-    o.frequency.exponentialRampToValueAtTime(140, t + 0.28);
-    const vib = ctx.createOscillator(); vib.frequency.value = 22;
-    const vg = ctx.createGain(); vg.gain.setValueAtTime(35, t); vg.gain.exponentialRampToValueAtTime(1, t + 0.3);
-    vib.connect(vg).connect(o.frequency);
-    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
-    o.connect(g).connect(ctx.destination);
-    o.start(t); vib.start(t); o.stop(t + 0.34); vib.stop(t + 0.34);
+    const out = ctx.createGain(); out.gain.value = vol; out.connect(ctx.destination);
+    // vilt-tik: heel korte ruisklap
+    const len = Math.floor(ctx.sampleRate * 0.03), nb = ctx.createBuffer(1, len, ctx.sampleRate), d = nb.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+    const ns = ctx.createBufferSource(); ns.buffer = nb;
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1600; bp.Q.value = 0.9;
+    const ng = ctx.createGain(); ng.gain.value = 0.8;
+    ns.connect(bp).connect(ng).connect(out); ns.start(t);
+    // holle "pok": toon die snel iets zakt en kort uitklinkt
+    [[260, 0.9], [610, 0.35]].forEach(([f, a]) => {
+      const o = ctx.createOscillator(); o.type = "sine";
+      o.frequency.setValueAtTime(f * 1.25, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.025);
+      const g = ctx.createGain(); g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+      o.connect(g).connect(out); o.start(t); o.stop(t + 0.1);
+    });
   }
+
 
   // ---- Trailerstem: eigen opname (sounds/stem.m4a) met effecten ----
   const VOICE_RATE = 0.84;               // lager en trager = zwaarder
@@ -848,10 +860,9 @@
     egg.classList.add("hidden"); void egg.offsetWidth; // animatie opnieuw starten
     egg.classList.remove("hidden");
     const t0 = ctx.currentTime;
-    // Boing bij elke stuit (de bal raakt de grond op 45%, 75% en 100% van de val van 1 sec)
-    eggTimers.push(setTimeout(() => boingSound(0.38), 450));
-    eggTimers.push(setTimeout(() => boingSound(0.22), 750));
-    eggTimers.push(setTimeout(() => boingSound(0.12), 1000));
+    // Tennisbal-tikken, steeds zachter (gelijk met de animatie: 0,34 · 0,62 · 0,80 · 0,92 · 1,00 sec)
+    [[340, 0.6], [620, 0.42], [800, 0.28], [920, 0.17], [1000, 0.09]].forEach(([ms, v]) =>
+      eggTimers.push(setTimeout(() => tennisSound(v), ms)));
     eggTimers.push(setTimeout(clampSound, 1220));
     braam(t0 + TEXT_AT, Math.min(total - TEXT_AT, 3.2));
     if (voice) playVoice(t0 + TEXT_AT + 0.05);
