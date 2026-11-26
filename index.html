@@ -736,17 +736,34 @@
       o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.4);
     });
   }
-  // Laser: snel dalende toon met een beetje trilling
-  function laserSound(from = 2200, to = 180, dur = 0.32, vol = 0.35) {
+  // Laser: stoere, lage blaster — dalende zaagtand + sub-bas eronder, warm gefilterd
+  function laserSound(from = 700, to = 55, dur = 0.5, vol = 0.4) {
     const ctx = ac(), t = ctx.currentTime;
-    const o = ctx.createOscillator(); o.type = "sawtooth";
-    o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + dur);
-    const lfo = ctx.createOscillator(); lfo.frequency.value = 38;
-    const lg = ctx.createGain(); lg.gain.value = 60; lfo.connect(lg).connect(o.frequency);
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 3800;
-    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(lp).connect(g).connect(ctx.destination);
-    o.start(t); lfo.start(t); o.stop(t + dur + 0.02); lfo.stop(t + dur + 0.02);
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass";
+    lp.frequency.setValueAtTime(2400, t); lp.frequency.exponentialRampToValueAtTime(300, t + dur); lp.Q.value = 6;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    lp.connect(g).connect(ctx.destination);
+    [["sawtooth", 1], ["sawtooth", 1.012], ["square", 0.5]].forEach(([type, mul]) => {
+      const o = ctx.createOscillator(); o.type = type;
+      o.frequency.setValueAtTime(from * mul, t); o.frequency.exponentialRampToValueAtTime(to * mul, t + dur);
+      o.connect(lp); o.start(t); o.stop(t + dur + 0.02);
+    });
+  }
+  // Boing: korte veerkrachtige toon die even omhoog wiebelt en dan zakt
+  function boingSound(vol = 0.35) {
+    const ctx = ac(), t = ctx.currentTime;
+    const o = ctx.createOscillator(); o.type = "sine";
+    o.frequency.setValueAtTime(180, t);
+    o.frequency.exponentialRampToValueAtTime(420, t + 0.04);
+    o.frequency.exponentialRampToValueAtTime(140, t + 0.28);
+    const vib = ctx.createOscillator(); vib.frequency.value = 22;
+    const vg = ctx.createGain(); vg.gain.setValueAtTime(35, t); vg.gain.exponentialRampToValueAtTime(1, t + 0.3);
+    vib.connect(vg).connect(o.frequency);
+    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+    o.connect(g).connect(ctx.destination);
+    o.start(t); vib.start(t); o.stop(t + 0.34); vib.stop(t + 0.34);
   }
 
   function playEgg() {
@@ -755,9 +772,13 @@
     egg.classList.add("hidden"); void egg.offsetWidth; // animatie opnieuw starten
     egg.classList.remove("hidden");
     try { ac().resume(); } catch (_) {}
-    eggTimers.push(setTimeout(clampSound, 1200));
+    // Boing bij elke stuit (de bal raakt de grond op 45%, 75% en 100% van de val van 1 sec)
+    eggTimers.push(setTimeout(() => boingSound(0.38), 450));
+    eggTimers.push(setTimeout(() => boingSound(0.22), 750));
+    eggTimers.push(setTimeout(() => boingSound(0.12), 1000));
+    eggTimers.push(setTimeout(clampSound, 1220));
     eggTimers.push(setTimeout(() => laserSound(), 1600));
-    eggTimers.push(setTimeout(() => laserSound(2600, 400, 0.26, 0.22), 2050));
+    eggTimers.push(setTimeout(() => laserSound(900, 90, 0.35, 0.28), 2050));
     eggTimers.push(setTimeout(closeEgg, 4800));
   }
   function closeEgg() { eggTimers.forEach(clearTimeout); eggTimers = []; $("egg").classList.add("hidden"); }
