@@ -226,6 +226,57 @@
 
   .notfound { text-align: center; padding: 40px 16px; }
 
+  /* ---------- Easter egg: ballbetween productions ---------- */
+  #eggTrigger { cursor: default; }
+  .egg {
+    position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+    background: radial-gradient(circle at 50% 50%, #241a45 0%, #07050f 75%);
+    animation: egg-fade 4.8s ease forwards;
+  }
+  .egg-row { display: flex; align-items: center; gap: clamp(12px, 3vw, 32px); }
+  .egg-logo { width: clamp(110px, 22vw, 220px); height: auto; overflow: visible; }
+  .egg-logo * { transform-box: fill-box; transform-origin: center; }
+  .egg-ring { opacity: 0; animation: egg-ring .35s ease 1.15s forwards; }
+  /* Bal valt erin en stuitert */
+  .egg-ball { animation: egg-drop 1s cubic-bezier(.3, 0, .4, 1) both; }
+  /* Muren schuiven naar binnen en klemmen de bal */
+  .egg-wall.l { animation: egg-wall-l .32s cubic-bezier(.6, 0, .9, .4) .9s both; }
+  .egg-wall.r { animation: egg-wall-r .32s cubic-bezier(.6, 0, .9, .4) .9s both; }
+  .egg-squash { animation: egg-squash .5s ease-out 1.2s both; }
+  /* Tekst schuift van links naar rechts naast het logo */
+  .egg-text { display: flex; flex-direction: column; gap: 4px; }
+  .egg-line { overflow: hidden; }
+  .egg-word {
+    display: block; font-style: normal; white-space: nowrap; color: var(--ink);
+    font-family: "Bowlby One", sans-serif; font-weight: 400; letter-spacing: .04em;
+    font-size: clamp(26px, 6.4vw, 72px); line-height: 1;
+    animation: egg-slide .45s cubic-bezier(.2, .9, .3, 1.2) 1.6s both;
+  }
+  .egg-word.sub {
+    font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: .42em;
+    font-size: clamp(12px, 2.6vw, 28px); color: var(--sun); animation-delay: 2.05s;
+  }
+  @keyframes egg-drop {
+    0% { transform: translateY(-260%); }
+    45% { transform: translateY(0); }
+    60% { transform: translateY(-55%); }
+    75% { transform: translateY(0); }
+    86% { transform: translateY(-18%); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes egg-wall-l { from { transform: translateX(-420%); } to { transform: translateX(0); } }
+  @keyframes egg-wall-r { from { transform: translateX(420%); } to { transform: translateX(0); } }
+  @keyframes egg-squash {
+    0% { transform: scale(1, 1); }
+    20% { transform: scale(.72, 1.22); }
+    45% { transform: scale(1.08, .94); }
+    70% { transform: scale(.96, 1.04); }
+    100% { transform: scale(1, 1); }
+  }
+  @keyframes egg-ring { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+  @keyframes egg-slide { from { transform: translateX(-110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes egg-fade { 0%, 88% { opacity: 1; } 100% { opacity: 0; } }
+
   /* ---------- Tv-modus: telefoon dwars of groot laptopscherm ---------- */
   @media (orientation: landscape) and (max-height: 600px), (min-width: 1100px) and (orientation: landscape) {
     body { background: #000; }
@@ -281,9 +332,30 @@
     </form>
     <p class="count" id="count"></p>
     <p class="hint-keys">Op de laptop: <kbd>spatie</kbd> speel/pauze · <kbd>←</kbd><kbd>→</kbd> spoelen · <kbd>R</kbd> opnieuw · <kbd>O</kbd> onthul · cijfers + <kbd>Enter</kbd> nieuwe kaart</p>
-    <span class="emblem"><svg><use href="#bb"/></svg><span class="txt"><b>BALLBETWEEN</b><i>productions</i></span></span>
+    <span class="emblem" id="eggTrigger"><svg><use href="#bb"/></svg><span class="txt"><b>BALLBETWEEN</b><i>productions</i></span></span>
   </div>
 </main>
+
+<!-- Easter egg: ballbetween productions -->
+<div class="egg hidden" id="egg" aria-hidden="true">
+  <div class="egg-row">
+    <svg class="egg-logo" viewBox="0 0 64 64">
+      <circle class="egg-ring" cx="32" cy="32" r="30" fill="#1b1533" stroke="#ffd23f" stroke-width="3"/>
+      <g class="egg-wall l"><rect x="12" y="16" width="6" height="32" rx="3" fill="#ff3d7f"/></g>
+      <g class="egg-wall r"><rect x="46" y="16" width="6" height="32" rx="3" fill="#ff3d7f"/></g>
+      <g class="egg-ball">
+        <g class="egg-squash">
+          <circle cx="32" cy="32" r="10" fill="#fff7e8"/>
+          <path d="M22.5 29 C27 31, 37 31, 41.5 29 M24 37.5 C28 35, 36 35, 40 37.5" stroke="#1b1533" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </g>
+      </g>
+    </svg>
+    <div class="egg-text">
+      <div class="egg-line"><b class="egg-word">BALLBETWEEN</b></div>
+      <div class="egg-line"><i class="egg-word sub">PRODUCTIONS</i></div>
+    </div>
+  </div>
+</div>
 
 <!-- Kaart -->
 <main id="card" class="hidden">
@@ -639,6 +711,58 @@
     else if (e.key === "o" || e.key === "O") { $("answer").classList.contains("hidden") ? reveal() : unreveal(); }
     else if (e.key === "Escape") unreveal();
   });
+
+  // ---------- Easter egg: ballbetween productions ----------
+  let audio = null, eggTimers = [];
+  const ac = () => (audio = audio || new (window.AudioContext || window.webkitAudioContext)());
+
+  // Metalen klem: korte ruisklap + lage dreun + metalen tik
+  function clampSound() {
+    const ctx = ac(), t = ctx.currentTime;
+    const noise = ctx.createBuffer(1, ctx.sampleRate * 0.25, ctx.sampleRate);
+    const d = noise.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const src = ctx.createBufferSource(); src.buffer = noise;
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1800; bp.Q.value = 1.2;
+    const ng = ctx.createGain(); ng.gain.setValueAtTime(0.9, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    src.connect(bp).connect(ng).connect(ctx.destination); src.start(t);
+    const thump = ctx.createOscillator(); thump.type = "sine";
+    thump.frequency.setValueAtTime(140, t); thump.frequency.exponentialRampToValueAtTime(45, t + 0.18);
+    const tg = ctx.createGain(); tg.gain.setValueAtTime(0.9, t); tg.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    thump.connect(tg).connect(ctx.destination); thump.start(t); thump.stop(t + 0.3);
+    [2350, 3420].forEach((f, k) => {           // metalen naklank
+      const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = f;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.12 / (k + 1), t); g.gain.exponentialRampToValueAtTime(0.0008, t + 0.35);
+      o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.4);
+    });
+  }
+  // Laser: snel dalende toon met een beetje trilling
+  function laserSound(from = 2200, to = 180, dur = 0.32, vol = 0.35) {
+    const ctx = ac(), t = ctx.currentTime;
+    const o = ctx.createOscillator(); o.type = "sawtooth";
+    o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 38;
+    const lg = ctx.createGain(); lg.gain.value = 60; lfo.connect(lg).connect(o.frequency);
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 3800;
+    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(lp).connect(g).connect(ctx.destination);
+    o.start(t); lfo.start(t); o.stop(t + dur + 0.02); lfo.stop(t + dur + 0.02);
+  }
+
+  function playEgg() {
+    const egg = $("egg");
+    eggTimers.forEach(clearTimeout); eggTimers = [];
+    egg.classList.add("hidden"); void egg.offsetWidth; // animatie opnieuw starten
+    egg.classList.remove("hidden");
+    try { ac().resume(); } catch (_) {}
+    eggTimers.push(setTimeout(clampSound, 1200));
+    eggTimers.push(setTimeout(() => laserSound(), 1600));
+    eggTimers.push(setTimeout(() => laserSound(2600, 400, 0.26, 0.22), 2050));
+    eggTimers.push(setTimeout(closeEgg, 4800));
+  }
+  function closeEgg() { eggTimers.forEach(clearTimeout); eggTimers = []; $("egg").classList.add("hidden"); }
+  $("eggTrigger").addEventListener("click", playEgg);
+  $("egg").addEventListener("click", closeEgg);
 })();
 </script>
 </body>
