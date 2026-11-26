@@ -763,18 +763,19 @@
     for (let i = 0; i < d.length; i += win) { let s = 0; for (let j = i; j < Math.min(i + win, d.length); j++) s += d[j] * d[j]; env.push(Math.sqrt(s / win)); }
     const peak = Math.max(...env), thr = peak * 0.08;
     const first = env.findIndex((v) => v > thr), last = env.length - 1 - [...env].reverse().findIndex((v) => v > thr);
-    // langste stille stuk binnen de opname = pauze tussen "Ballbetween" en "Productions"
+    // langste stille stuk binnen de opname = pauze tussen "Ballbetween" en "Productions";
+    // "PRODUCTIONS" verschijnt aan het begin van die pauze (direct na "Ballbetween")
     let best = null, runStart = null;
     for (let i = first; i <= last; i++) {
       if (env[i] < thr) { if (runStart === null) runStart = i; }
       else if (runStart !== null) { if (!best || i - runStart > best[1] - best[0]) best = [runStart, i]; runStart = null; }
     }
     const t = (k) => (k * win) / sr;
-    return { start: Math.max(0, t(first) - 0.03), end: t(last) + 0.15, word2: best && best[1] - best[0] >= 4 ? t(best[1]) : null };
+    return { start: Math.max(0, t(first) - 0.03), end: t(last) + 0.15, word2: best && best[1] - best[0] >= 4 ? t(best[0]) : null };
   }
 
   // Galm van een grote zaal: kunstmatige impulsrespons (wegstervende ruis)
-  function hallIR(ctx, secs = 2.8) {
+  function hallIR(ctx, secs = 1.6) {
     const len = Math.floor(ctx.sampleRate * secs), ir = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
     return ir;
@@ -793,13 +794,13 @@
     comp.connect(dry).connect(ctx.destination);
     // galm
     const rev = ctx.createConvolver(); rev.buffer = hallIR(ctx);
-    const wet = ctx.createGain(); wet.gain.value = 0.55;
+    const wet = ctx.createGain(); wet.gain.value = 0.22;
     comp.connect(rev).connect(wet).connect(ctx.destination);
     // echo
     const dl = ctx.createDelay(1); dl.delayTime.value = 0.32;
-    const fb = ctx.createGain(); fb.gain.value = 0.32;
+    const fb = ctx.createGain(); fb.gain.value = 0.18;
     const ef = ctx.createBiquadFilter(); ef.type = "lowpass"; ef.frequency.value = 2200;
-    const eg = ctx.createGain(); eg.gain.value = 0.35;
+    const eg = ctx.createGain(); eg.gain.value = 0.14;
     comp.connect(dl); dl.connect(ef).connect(fb).connect(dl); ef.connect(eg).connect(ctx.destination);
     src.start(when, start, end - start);
   }
@@ -832,7 +833,8 @@
     }
     // Duur en het moment van "PRODUCTIONS" afstemmen op de stem
     const TEXT_AT = 1.55;
-    const word2 = voice && voice.word2 ? TEXT_AT + (voice.word2 - voice.start) / VOICE_RATE : 2.05;
+    const PRODUCTIONS_EARLIER = 0.5;     // hoeveel sec "PRODUCTIONS" vóór het gesproken woord in beeld komt
+    const word2 = voice && voice.word2 ? Math.max(2.05, TEXT_AT + (voice.word2 - voice.start) / VOICE_RATE - PRODUCTIONS_EARLIER) : 2.05;
     const voiceEnd = voice ? TEXT_AT + (voice.end - voice.start) / VOICE_RATE : 2.6;
     const total = Math.max(4.8, voiceEnd + 1.8);
     egg.style.animationDuration = total + "s";
